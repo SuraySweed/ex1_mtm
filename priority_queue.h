@@ -252,7 +252,7 @@ PQElement pqGetNext(PriorityQueue queue);
 * 	Target priority queue to remove all element from.
 * @return
 * 	MAP_NULL_ARGUMENT - if a NULL pointer was sent.
-* 	MAP_SUCCESS - Otherwise.
+* 	MAP_S`UCCESS - Otherwise.
 */
 PriorityQueueResult pqClear(PriorityQueue queue);
 
