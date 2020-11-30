@@ -109,7 +109,7 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
                        ComparePQElementPriorities compare_priorities);
 
 /**
-* pqDestroy: Deallocates an existing priority queue. Clears all elements by using the
+* pqDe stroy: Deallocates an existing priority queue. Clears all elements by using the
 * free functions.
 *
 * @param queue - Target priority queue to be deallocated. If priority queue is NULL nothing will be

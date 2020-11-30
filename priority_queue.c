@@ -3,12 +3,18 @@
 #include <stdlib.h>
 
 #define NULL_OBJECT -1
+#define ZERO 0
+
+typedef struct node_t {
+    PQElement elementNode;
+    PQElementPriority elementPriorityNode;
+    struct node_t* next;
+} *Node;
 
 struct PriorityQueue_t {
-    PQElement pq_element;
-    PQElementPriority pq_element_priority;
-    int elemnts_counter;
-    struct PriorityQueue_t* next;
+    Node node;
+    int elements_counter;
+    int iterator; //*******
 
     /* Elemetn operations */ 
     CopyPQElement copy_element;
@@ -21,6 +27,35 @@ struct PriorityQueue_t {
     ComparePQElementPriorities compare_priorities;
 };
 
+static Node createNode()
+{
+    Node node = malloc(sizeof(*node));
+    if(!node)
+    {
+        return NULL;
+    }
+
+    node->elementNode = NULL;
+    node->elementPriorityNode = NULL;
+    node->next = NULL;
+
+    return node;
+}
+
+// if node is null, return
+static void nodesDestroy(PriorityQueue queue)
+{
+    Node nodeDelete = queue->node;
+    
+    while (nodeDelete)
+    {
+        Node toDelete = nodeDelete;
+        queue->free_element(toDelete->elementNode);
+        queue->free_priority(toDelete->elementPriorityNode);
+        nodeDelete = nodeDelete->next;
+        free(toDelete);
+    }
+}
 
 PriorityQueue pqCreate(CopyPQElement copy_element,
                        FreePQElement free_element,
@@ -29,13 +64,215 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
                        FreePQElementPriority free_priority,
                        ComparePQElementPriorities compare_priorities)
 {
-    if(!copy_element || !free_element || !equal_elements || !copy_priority || !free_priority || !compare_priorities)
+    if (!copy_element || !free_element || !equal_elements || !copy_priority || !free_priority || !compare_priorities)
     {
         return NULL;
     }
 
     PriorityQueue priority_queue = malloc(sizeof(*priority_queue));
-    if(priority_queue == NULL)
+    
+    if (priority_queue == NULL)
+    {
+        return NULL;
+    }
+
+    Node node = createNode();
+    
+    priority_queue->node = node;
+    priority_queue->elements_counter = 0;
+    priority_queue->iterator = 0;
+
+    priority_queue->copy_element = copy_element;
+    priority_queue->free_element = free_element;
+    priority_queue->equal_elements = equal_elements;
+
+    priority_queue->copy_priority = copy_priority;
+    priority_queue->free_priority = free_priority;
+    priority_queue->compare_priorities = compare_priorities;
+    
+    return priority_queue;
+}
+
+void pqDestroy(PriorityQueue queue)
+{
+     if (!queue)
+    {
+        return;
+    }
+
+    nodesDestroy(queue);
+    free(queue);
+}
+
+
+PriorityQueue pqCopy(PriorityQueue queue)
+{
+    if (!queue)
+    {
+        return NULL;
+    }
+    
+    PriorityQueue newPQ = pqCreate(queue->copy_element, queue->free_element, queue->equal_elements,
+                            queue->copy_priority, queue->free_priority, queue->compare_priorities);
+
+
+    if (!newPQ)
+    {
+        return NULL;
+    }
+
+    newPQ->elements_counter = queue->elements_counter;
+    newPQ->iterator = queue->iterator;
+    
+    Node node = queue->node;
+
+    while (node)
+    {
+        newPQ->node->elementNode = queue->copy_element(node->elementNode);
+        newPQ->node->elementPriorityNode = queue->copy_priority(node->elementPriorityNode);
+        node = node->next;
+    }
+
+    return newPQ;
+}
+
+int pqGetSize(PriorityQueue queue)
+{
+    if (!queue)
+    {
+        return NULL_OBJECT;
+    }
+
+    return queue->elements_counter; 
+}
+
+bool pqContains(PriorityQueue queue, PQElement element)
+{
+    if (!queue || !element)
+    {
+        return false;
+    }
+
+    for (Node ptr = queue->node; ptr != NULL; ptr = ptr->next)
+    {
+        if (queue->equal_elements(ptr->elementNode, element))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPriority priority)
+{
+    if (!queue || !element || !priority)
+    {
+        return PQ_NULL_ARGUMENT;
+    } 
+
+    PQElement copyElement = queue->copy_element(element);
+    PQElementPriority copyPriority = queue->copy_priority(priority);
+    
+    if (!copyElement)
+    {
+        return PQ_OUT_OF_MEMORY;  
+    }
+    
+    if (!copyPriority)
+    {
+        return PQ_OUT_OF_MEMORY;
+    }
+
+    Node head = queue->node;
+    Node nodeAdd = createNode();
+
+    nodeAdd->elementNode = copyElement;
+    nodeAdd->elementPriorityNode = copyPriority;
+
+    if (queue->compare_priorities(priority, head->elementPriorityNode) > ZERO || queue->node == NULL)
+    {
+        nodeAdd->next = head;
+        // link the head to queue
+    }
+    
+    else
+    {
+        while (queue->compare_priorities(priority, head->elementPriorityNode) <= ZERO && head->next != NULL)
+        {
+            head = head->next;
+        }
+        if (head->next)
+        {   
+            if(head->next->next)
+            {
+                Node temp = head->next->next;
+                head->next = nodeAdd; 
+                nodeAdd->next = temp;
+            }
+            else
+            {
+                head->next = nodeAdd;
+                nodeAdd->next = NULL;
+            }
+        }
+        else
+        {
+            head->next = nodeAdd;
+            nodeAdd->next = NULL;
+        }
+        
+    }
+
+    return PQ_SUCCESS;
+}
+
+PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
+                                    PQElementPriority old_priority, PQElementPriority new_priority)
+{
+    
+}
+
+
+
+
+
+
+
+/*
+struct PriorityQueue_t {
+    PQElement pq_element;
+    PQElementPriority pq_element_priority;
+    int elemnts_counter;
+    struct PriorityQueue_t* next;
+
+    /* Elemetn operations */ 
+    /*
+    CopyPQElement copy_element;
+    FreePQElement free_element;
+    EqualPQElements equal_elements;
+
+    /* priority operations */
+    /*
+    CopyPQElementPriority copy_priority;
+    FreePQElementPriority free_priority;
+    ComparePQElementPriorities compare_priorities;
+};
+
+PriorityQueue pqCreate(CopyPQElement copy_element,
+                       FreePQElement free_element,
+                       EqualPQElements equal_elements,
+                       CopyPQElementPriority copy_priority,
+                       FreePQElementPriority free_priority,
+                       ComparePQElementPriorities compare_priorities)
+{
+    if (!copy_element || !free_element || !equal_elements || !copy_priority || !free_priority || !compare_priorities)
+    {
+        return NULL;
+    }
+
+    PriorityQueue priority_queue = malloc(sizeof(*priority_queue));
+    if (priority_queue == NULL)
     {
         return NULL;
     }
@@ -52,21 +289,50 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
     priority_queue->copy_priority = copy_priority;
     priority_queue->free_priority = free_priority;
     priority_queue->compare_priorities = compare_priorities;
+
+    return priority_queue;
 }
 
 void pqDestroy(PriorityQueue queue)
 {
-    if(!queue)
+    if (!queue)
     {
         return;
     }
+
     pqDestroy(queue->next);
+    queue->free_element(queue->pq_element);
+    queue->free_priority(queue->pq_element_priority);
     free(queue);
+
+    /*
+    if (queue->next)
+    {
+        PriorityQueue currentNode = queue->next;
+
+        while (currentNode)
+        {
+            queue->free_element(currentNode->pq_element);
+            queue->free_priority(currentNode->pq_element_priority);
+            currentNode = currentNode->next;
+        }
+
+        currentNode = queue->next;
+        
+        while (currentNode)
+        {
+            PriorityQueue toDelete = currentNode;
+            currentNode = currentNode->next;
+            free (toDelete);
+        }
+    }
+    free (queue);
+    
 }
 
 PriorityQueue pqCopy(PriorityQueue queue)
 {
-    if(!pqCopy)
+    if (!pqCopy)
     {
         return NULL;
     }
@@ -75,19 +341,24 @@ PriorityQueue pqCopy(PriorityQueue queue)
                             queue->copy_priority, queue->free_priority, queue->compare_priorities);
 
 
-    if(!newPQ)
+    if (!newPQ)
     {
         return NULL;
     }
+    
+    for (PriorityQueue ptr = queue; ptr != NULL; ptr = ptr->next)
+    {
+        newPQ->pq_element = ptr->pq_element;
+        newPQ->pq_element_priority = ptr->pq_element_priority;
+        newPQ->next = ptr->next;
+    }
 
-    /*
-        TODO!!!
-    */
+    return newPQ;
 }
 
 int pqGetSize(PriorityQueue queue)
 {
-    if(!queue)
+    if (!queue)
     {
         return NULL_OBJECT;
     }
@@ -97,14 +368,14 @@ int pqGetSize(PriorityQueue queue)
 
 bool pqContains(PriorityQueue queue, PQElement element)
 {
-    if(!queue || !element)
+    if (!queue || !element)
     {
         return false;
     }
 
-    for(PriorityQueue ptr = queue; ptr != NULL; ptr = ptr->next)
+    for (PriorityQueue ptr = queue; ptr != NULL; ptr = ptr->next)
     {
-        if(queue->equal_elements(ptr->pq_element, element))
+        if (queue->equal_elements(ptr->pq_element, element))
         {
             return true;
         }
@@ -115,7 +386,7 @@ bool pqContains(PriorityQueue queue, PQElement element)
 
 PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPriority priority)
 {
-    if(!queue || !element || !priority)
+    if (!queue || !element || !priority)
     {
         return PQ_NULL_ARGUMENT;
     } 
@@ -123,34 +394,19 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     PQElement copyElement = queue->copy_element(element);
     PQElementPriority copyPriority = queue->copy_priority(priority);
     
-    if(!copyElement)
+    if (!copyElement)
     {
         return PQ_OUT_OF_MEMORY;  
     }
     
-    if(!copyPriority)
+    if (!copyPriority)
     {
         return PQ_OUT_OF_MEMORY;
     }
-    
-    //nash nnsa yash sekoy l copy
-    PriorityQueue newPQ;
 
-    
-    if(queue->compare_priorities(priority, queue->pq_element_priority))
-    {
-        newPQ->next = queue;
-        queue = pqCopy(newPQ);
-    }
+    PriorityQueue head;
 
-    /*
-    for(PriorityQueue ptr = queue; ptr != NULL; ptr = ptr->next)
-    {
-        if(queue->compare_priorities(priority, queue->pq_element_priority))
-        {
 
-        }
-    }
-    */
 }
+*/
 
