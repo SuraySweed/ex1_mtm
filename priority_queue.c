@@ -65,7 +65,7 @@ static void nodesDestroy(PriorityQueue queue)
 
     while (nodeDelete)
     {
-        Node toDelete = nodeDelete;
+        //Node toDelete = nodeDelete;
         queue->free_element(nodeDelete->elementNode);
         queue->free_priority(nodeDelete->elementPriorityNode);
         nodeDelete = nodeDelete->next;
@@ -219,7 +219,7 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     }
 
     Node head = queue->node;
-    Node start = queue->node;
+    //Node start = queue->node;
 
     Node nodeAdd = createNode();
     nodeAdd->elementNode = copyElement;
