@@ -49,12 +49,12 @@ static Node copyNodes(PriorityQueue queue, Node node)
     {
         return NULL;
     }
-    
+
     Node copyNode = createNode();
     copyNode->elementNode = queue->copy_element(node->elementNode);
     copyNode->elementPriorityNode = queue->copy_priority(node->elementPriorityNode);
     copyNode->next = copyNodes(queue, node->next);
-    
+
     return copyNode;
 }
 
@@ -150,9 +150,9 @@ PriorityQueue pqCopy(PriorityQueue queue)
     newPQ->iterator = queue->iterator;
     newPQ->currentNodeNumber = 0;
     Node currentNode = queue->node;
-    
+
     Node copyNode = copyNodes(queue, currentNode);
-    
+
     newPQ->node = copyNode;
 
     /*
@@ -162,7 +162,7 @@ PriorityQueue pqCopy(PriorityQueue queue)
     {
         copyNode->elementNode = queue->copy_element(currentNode->elementNode);
         copyNode->elementPriorityNode = queue->copy_priority(currentNode->elementPriorityNode);
-       
+
         copyNode->next = NULL;
         currentNode = currentNode->next;
     }
@@ -228,7 +228,7 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
 
     if (!(queue->node))
     {
-        queue->node = nodeAdd; 
+        queue->node = nodeAdd;
         queue->elements_counter++;
         return PQ_SUCCESS;
     }
@@ -241,10 +241,18 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
         queue->elements_counter++;
         return PQ_SUCCESS;
     }
-    
+
     else
     {
-        while (queue->compare_priorities(priority, head->elementPriorityNode) <= ZERO && head->next != NULL)
+
+        while (queue->compare_priorities(priority, head->elementPriorityNode) < ZERO && head->next != NULL &&
+            queue->compare_priorities(priority, head->next->elementPriorityNode) < ZERO)
+        {
+            head = head->next;
+        }
+        
+        while ( (queue->compare_priorities(priority, head->elementPriorityNode) == ZERO) && head->next != NULL && 
+            (queue->compare_priorities(priority, head->next->elementPriorityNode) == ZERO))
         {
             head = head->next;
         }
@@ -321,6 +329,8 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
         return 	PQ_NULL_ARGUMENT;
     }
 
+    //new iterator
+    queue->iterator = NULL;
     PQElement copyElement = queue->copy_element(element);
     PQElementPriority copyPriority = queue->copy_priority(new_priority);
 
@@ -346,8 +356,8 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
     while (!(queue->equal_elements(currentNode->elementNode, element))
         && !(queue->compare_priorities(currentNode->elementPriorityNode, old_priority)))
     */
-    while ( !(queue->compare_priorities(currentNode->elementPriorityNode, old_priority))
-            && !(queue->equal_elements(currentNode->elementNode, element)) )
+    while ((queue->compare_priorities(currentNode->elementPriorityNode, old_priority)) != 0
+        && !(queue->equal_elements(currentNode->elementNode, element)))
     {
         // if we exit the loop, so currentNode is the node that we have to change it
         tempNode = currentNode;
@@ -356,18 +366,24 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
         if (currentNode == NULL || currentNode->next == NULL)
         {
             return PQ_ELEMENT_DOES_NOT_EXISTS;
-        }    
+        }
     }
-    
+
     tempNode->next = currentNode->next;
 
     queue->free_element(currentNode->elementNode);
     queue->free_priority(currentNode->elementPriorityNode);
+
     free(currentNode);
+    
+    if (queue->elements_counter == 1)
+    {
+        queue->node = NULL;
+    }
 
     queue->elements_counter--;
 
-    pqInsert(queue, element, new_priority);
+    pqInsert(queue, copyElement, copyPriority);
 
     return PQ_SUCCESS;
 }
@@ -469,8 +485,8 @@ PQElement pqGetNext(PriorityQueue queue)
     {
         return NULL;
     }
-    
-    
+
+
     int counter = 1;
     Node currentNode;
 
@@ -481,7 +497,7 @@ PQElement pqGetNext(PriorityQueue queue)
     {
         return NULL;
     }
-    
+
 
     queue->iterator = currentNode->next->elementNode;
 
@@ -496,19 +512,24 @@ PriorityQueueResult pqClear(PriorityQueue queue)
     }
 
     Node currentNode = queue->node;
-    Node toDelete = currentNode;
+    //Node toDelete = currentNode;
 
     queue->elements_counter = 0;
 
     while (currentNode)
     {
-        toDelete = currentNode;
+        Node toDelete = currentNode; //new
         queue->free_element(currentNode->elementNode);
         queue->free_priority(currentNode->elementPriorityNode);
         currentNode = currentNode->next;
 
         free(toDelete);
     }
+    //new
+    queue->node = NULL;
+    queue->elements_counter = 0;
+    queue->currentNodeNumber = 0;
+    queue->iterator = NULL;
 
     return PQ_SUCCESS;
 }

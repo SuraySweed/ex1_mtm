@@ -17,12 +17,12 @@
  */
 
 
-/**
- * Evaluates expr and continues if expr is true.
- * If expr is false, ends the test by returning false and prints a detailed
- * message about the failure.
- */
- #define ASSERT_TEST(expr, goto_label)                                                         \
+ /**
+  * Evaluates expr and continues if expr is true.
+  * If expr is false, ends the test by returning false and prints a detailed
+  * message about the failure.
+  */
+#define ASSERT_TEST(expr, goto_label)                                                         \
      do {                                                                          \
          if (!(expr)) {                                                            \
              printf("\nAssertion failed at %s:%d %s ", __FILE__, __LINE__, #expr); \
@@ -31,10 +31,10 @@
          }                                                                         \
      } while (0)
 
-/**
- * Macro used for running a test from the main function
- */
-#define RUN_TEST(test, name)                  \
+  /**
+   * Macro used for running a test from the main function
+   */
+#define RUN_TEST(test, name, testFail)                  \
     do {                                 \
       printf("Running %s ... ", name);   \
         if (test()) {                    \
