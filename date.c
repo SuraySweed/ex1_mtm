@@ -37,7 +37,7 @@ static bool isDateValid(Date date)
 static int dateToDays(Date date)
 {
     assert(date != NULL);
-    return (date->day + ((date->month) * (MAX_DAY - MIN_DAY)) + (DAYS_IN_YEAR * (date->year))); 
+    return (date->day + ((date->month) * (MAX_DAY - MIN_DAY + 1)) + (DAYS_IN_YEAR * (date->year))); 
 }
 
 static int dateDifference(Date date1, Date date2)
@@ -93,9 +93,9 @@ bool dateGet(Date date, int* day, int* month, int* year)
         return false;
     }
 
-    date->day = *day;
-    date->month = *month;
-    date->year = *year;
+    *day = date->day;
+    *month = date->month;
+    *year = date->year;
 
     return true;
 }
@@ -129,18 +129,18 @@ void dateTick(Date date)
 
     assert(isDateValid(date));
 
-    if(date->day < 30)
+    if(date->day < MAX_DAY)
     {
         date->day = date->day + 1;       
     }
 
-    else if (date->day == 30 && date->month < 12)
+    else if (date->day == MAX_DAY && date->month < MAX_MONTH)
     {
         date->day = 1;
         date->month = date->month + 1;
     }
 
-    else if(date->day == 30 && date->month == 12)
+    else if(date->day == MAX_DAY && date->month == MAX_MONTH)
     {
         date->day = 1;
         date->month = 1;

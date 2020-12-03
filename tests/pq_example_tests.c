@@ -31,7 +31,7 @@ static bool equalIntsGeneric(PQElementPriority n1, PQElementPriority n2) {
 bool testPQCreateDestroy() {
     bool result = true;
 
-    PriorityQueue pq = pqCerate(copyIntGeneric, freeIntGeneric, equalIntsGeneric, copyIntGeneric, freeIntGeneric, compareIntsGeneric);
+    PriorityQueue pq = pqCreate(copyIntGeneric, freeIntGeneric, equalIntsGeneric, copyIntGeneric, freeIntGeneric, compareIntsGeneric);
     ASSERT_TEST(pq != NULL, returnPQCreateDestroy);
     ASSERT_TEST(pqGetSize(pq) == 0,destroyPQCreateDestroy);
     ASSERT_TEST(pqGetFirst(pq) == NULL,destroyPQCreateDestroy);
