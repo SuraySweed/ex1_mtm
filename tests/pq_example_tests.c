@@ -66,7 +66,15 @@ PriorityQueue getMultipleElementPQ() {
 
 
 /* ============= TESTING pqCreate ============= */
+bool testPQCreateStandardTest() {
+    bool result = true;
+    PQ pq = createPQ();
+    ASSERT_TEST(pq != NULL, destroy);
 
+destroy:
+    pqDestroy(pq);
+    return result;
+}
 
 /* ============= TESTING pqDestroy ============= */
 bool testMemoryPQDestroyEmptyPQ() {
@@ -306,6 +314,7 @@ destroy:
 }
 
 
+
 /* ============= TESTING pqInsert ============= */
 bool testPQInsertSampleNULLArgument() {
     bool result = true;
@@ -450,24 +459,7 @@ destroy:
     return result;
 }
 
-bool testChangePriorityByRef() {
-    bool result = true;
-    PriorityQueue pq = pqCreate(copyIntGeneric, freeIntGeneric, equalIntsGeneric, copyIntGeneric, freeIntGeneric, compareIntsGeneric);
 
-    int elem1 = 5;
-    ASSERT_TEST(pqInsert(pq, &elem1, &elem1) == PQ_SUCCESS, destroy);
-
-    int* elem1_ptr = (int*)pqGetFirst(pq);
-    ASSERT_TEST(*elem1_ptr == elem1, destroy);
-
-    ASSERT_TEST(pqChangePriority(pq, elem1_ptr, elem1_ptr, elem1_ptr) == PQ_SUCCESS, destroy);
-    elem1_ptr = (int*)pqGetFirst(pq);
-    ASSERT_TEST(*elem1_ptr == elem1, destroy);
-
-destroy:
-    pqDestroy(pq);
-    return result;
-}
 
 /* ============= TESTING pqRemove ============= */
 
@@ -476,6 +468,17 @@ bool testPQRemoveSampleNullArgument() {
     ASSERT_TEST(pqRemove(NULL) == PQ_NULL_ARGUMENT, destroy);
 
 destroy:
+    return result;
+}
+
+
+bool testPQRemoveOnEmptyQueueReturnsSuccess() {
+    bool result = true;
+    PQ pq = createPQ();
+    ASSERT_TEST(pqRemove(pq) == PQ_SUCCESS, destroy);
+
+destroy:
+    pqDestroy(pq);
     return result;
 }
 
@@ -624,6 +627,72 @@ destroy:
     return result;
 }
 
+bool testPQGetNextIteratorStaysTheSameInMostFunction() {
+    bool result = true;
+    PQ pq = createPQ();
+
+    int elem1 = 1;
+    int elem2 = 2;
+    int elem3 = 3;
+    pqInsert(pq, &elem1, &elem1);
+    pqInsert(pq, &elem2, &elem2);
+    pqInsert(pq, &elem3, &elem3);
+
+    ASSERT_TEST((*(int*)pqGetFirst(pq)) == 3, destroy);
+    ASSERT_TEST((*(int*)pqGetNext(pq)) == 2, destroy);
+
+    PQ pq_temp = createPQ();
+    pqDestroy(pq_temp);
+    pqContains(pq, &elem1);
+    pqGetSize(pq);
+
+    ASSERT_TEST((*(int*)pqGetNext(pq)) == 1, destroy);
+
+destroy:
+    pqDestroy(pq);
+    return result;
+}
+
+
+bool testPQIteratorPointsToNullAfterSomeOfTheFunctions() {
+    bool result = true;
+    PQ pq = getMultipleElementPQ();
+
+    int elem1 = 1;
+    pqInsert(pq, &elem1, &elem1);
+
+    pqGetFirst(pq);
+    ASSERT_TEST(pqGetNext(pq) != NULL, destroy);
+
+    ASSERT_TEST(pqGetFirst(pq) != NULL, destroy);
+    pqInsert(pq, &elem1, &elem1);
+    ASSERT_TEST(pqGetNext(pq) == NULL, destroy);
+
+    ASSERT_TEST(pqGetFirst(pq) != NULL, destroy);
+    pqRemove(pq);
+    ASSERT_TEST(pqGetNext(pq) == NULL, destroy);
+
+    ASSERT_TEST(pqGetFirst(pq) != NULL, destroy);
+    pqRemoveElement(pq, &elem1);
+    ASSERT_TEST(pqGetNext(pq) == NULL, destroy);
+
+    ASSERT_TEST(pqGetFirst(pq) != NULL, destroy);
+    PQ new_pq = pqCopy(pq);
+    ASSERT_TEST(pqGetNext(pq) == NULL, destroyNewPq);
+    ASSERT_TEST(pqGetNext(new_pq) == NULL, destroyNewPq);
+
+    ASSERT_TEST(pqGetFirst(pq) != NULL, destroy);
+    int new_prio = 5;
+    pqChangePriority(pq, &elem1, &elem1, &new_prio);
+    ASSERT_TEST(pqGetNext(pq) == NULL, destroy);
+
+destroyNewPq:
+    pqDestroy(new_pq);
+destroy:
+    pqDestroy(pq);
+    return result;
+}
+
 
 /* ============= TESTING pqClear ============= */
 bool testPQClearWorksOkayOnEmptyQueue() {
@@ -728,10 +797,13 @@ destroyPQIterator:
 
 
 bool (*tests[])(void) = {
+        testPQCreateStandardTest,
         testPQCreateDestroy,
         testPQInsertAndSize,
         testPQGetFirst,
         testPQIterator,
+        testPQIteratorPointsToNullAfterSomeOfTheFunctions,
+        testPQGetNextIteratorStaysTheSameInMostFunction,
         testMemoryPQDestroyEmptyPQ,
         testMemoryPQDestroySingleElement,
         testMemoryPQDestroyMultipleElement,
@@ -753,8 +825,8 @@ bool (*tests[])(void) = {
         testPQChangePriorityNonExistentElement,
         testPQChangePrioritySampleNullArgument,
         testPQChangePriorityWOnlyChangesFirstOfMultipleSameElementsAndReinsertsIt,
-        testChangePriorityByRef,
         testPQRemoveSampleNullArgument,
+        testPQRemoveOnEmptyQueueReturnsSuccess,
         testPQRemoveStandardTest,
         testPQRemoveElementDoesNotExistAfterRemove,
         testPQRemoveElementStandardTestAndAlsoOnlyRemovesFirstOfMultipleSameElements,
@@ -767,14 +839,18 @@ bool (*tests[])(void) = {
 };
 
 const char* testNames[] = {
+        "testPQCreateStandardTest",
         "testPQCreateDestroy",
         "testPQInsertAndSize",
         "testPQGetFirst",
         "testPQIterator",
+        "testPQIteratorPointsToNullAfterSomeOfTheFunctions",
+        "testPQGetNextIteratorStaysTheSameInMostFunction",
         "testMemoryPQDestroyEmptyPQ",
         "testMemoryPQDestroySingleElement",
         "testMemoryPQDestroyMultipleElement",
         "testPQCopySampleNULLArgument",
+        "testPQRemoveOnEmptyQueueReturnsSuccess",
         "testPQCopySingleElement",
         "testPQCopyMultipleElement",
         "testPQCopyMultipleSameElementDifferentPriority",
@@ -792,7 +868,6 @@ const char* testNames[] = {
         "testPQChangePriorityNonExistentElement",
         "testPQChangePrioritySampleNullArgument",
         "testPQChangePriorityWOnlyChangesFirstOfMultipleSameElementsAndReinsertsIt",
-        "testChangePriorityByRef",
         "testPQRemoveSampleNullArgument",
         "testPQRemoveStandardTest",
         "testPQRemoveElementDoesNotExistAfterRemove",
@@ -806,46 +881,49 @@ const char* testNames[] = {
 };
 
 const char* testFailDescriptions[] = {
-        "testPQCreateDestroy",
-        "testPQInsertAndSize",
-        "testPQGetFirst",
-        "testPQIterator",
-        "testMemoryPQDestroyEmptyPQ",
-        "testMemoryPQDestroySingleElement",
-        "testMemoryPQDestroyMultipleElement",
-        "testPQCopySampleNULLArgument",
-        "testPQCopySingleElement",
-        "testPQCopyMultipleElement",
-        "testPQCopyMultipleSameElementDifferentPriority",
-        "testPQCopyMultipleSameElementSamePriority",
-        "testPQGetSizeSampleNullArgument",
-        "testPQGetSizeStandardTest",
-        "testPQContainsSampleNullArgument",
-        "testPQContainsStandardTest",
-        "testPQContainsFalseAfterRemove",
-        "testPQContainsSameElementMultipleTimesAlsoWithDifferentPriority",
-        "testPQInsertSampleNULLArgument",
-        "testPQInsertStandardTest",
-        "testPQInsertPutsNewElementsInCorrectPlace",
-        "testPQChangePriorityAlsoChangesPositionInQueue",
-        "testPQChangePriorityNonExistentElement",
-        "testPQChangePrioritySampleNullArgument",
-        "testPQChangePriorityWOnlyChangesFirstOfMultipleSameElementsAndReinsertsIt",
-        "testChangePriorityByRef", 
-        "testPQRemoveSampleNullArgument",
-        "testPQRemoveStandardTest",
-        "testPQRemoveElementDoesNotExistAfterRemove",
-        "testPQRemoveElementStandardTestAndAlsoOnlyRemovesFirstOfMultipleSameElements",
-        "testPQGetFirstEmptyQueueReturnNull",
-        "testPQSGetFirstStandardTest",
-        "testPQGetNextStandardTest",
-        "testPQGetNextTraversesTheQueueCorrectlyByPriority",
-        "testPQClearStandardTest",
-        "testPQClearWorksOkayOnEmptyQueue"
+        "Please refer to the code at function: testPQCreateStandardTest",
+        "Please refer to the code at function: testPQCreateDestroy",
+        "Please refer to the testing code at function: testPQInsertAndSize",
+        "Please refer to the testing code at function: testPQGetFirst",
+        "Please refer to the testing code at function: testPQIterator",
+        "According to the course segel after the following functions the iterator should be null: pqInsert, pqCopy (both pqs), pqChangePriority, pqRemove, pqRemoveElement. If the test failed, your iterator isn't NULL after one of these functions",
+        "Please refer to the testing code at function: testPQGetNextIteratorStaysTheSameInMostFunction",
+        "Please refer to the testing code at function: testMemoryPQDestroyEmptyPQ",
+        "Please refer to the testing code at function: testMemoryPQDestroySingleElement",
+        "Please refer to the testing code at function: testMemoryPQDestroyMultipleElement",
+        "Please refer to the testing code at function: testPQCopySampleNULLArgument",
+        "Please refer to the testing code at function: testPQCopySingleElement",
+        "Please refer to the testing code at function: testPQCopyMultipleElement",
+        "Please refer to the testing code at function: testPQCopyMultipleSameElementDifferentPriority",
+        "Please refer to the testing code at function: testPQCopyMultipleSameElementSamePriority",
+        "Please refer to the testing code at function: testPQGetSizeSampleNullArgument",
+        "Please refer to the testing code at function: testPQGetSizeStandardTest",
+        "Please refer to the testing code at function: testPQContainsSampleNullArgument",
+        "Please refer to the testing code at function: testPQContainsStandardTest",
+        "Please refer to the testing code at function: testPQContainsFalseAfterRemove",
+        "Please refer to the testing code at function: PQContainsSameElementMultipleTimesAlsoWithDifferentPriority",
+        "Please refer to the testing code at function: testPQInsertSampleNULLArgument",
+        "Please refer to the testing code at function: testPQInsertStandardTest",
+        "Please refer to the testing code at function: testPQInsertPutsNewElementsInCorrectPlace",
+        "Please refer to the testing code at function: testPQChangePriorityAlsoChangesPositionInQueue",
+        "Please refer to the testing code at function: testPQChangePriorityNonExistentElement",
+        "Please refer to the testing code at function: testPQChangePrioritySampleNullArgument",
+        "Please refer to the testing code at function: testPQChangePriorityWOnlyChangesFirstOfMultipleSameElementsAndReinsertsIt",
+        "Please refer to the testing code at function: testPQRemoveSampleNullArgument",
+        "Please refer to the testing code at function: testPQRemoveOnEmptyQueueReturnsSuccess",
+        "Please refer to the testing code at function: testPQRemoveStandardTest",
+        "Please refer to the testing code at function: testPQRemoveElementDoesNotExistAfterRemove",
+        "Please refer to the testing code at function: testPQRemoveElementStandardTestAndAlsoOnlyRemovesFirstOfMultipleSameElements",
+        "Please refer to the testing code at function: testPQGetFirstEmptyQueueReturnNull",
+        "Please refer to the testing code at function: testPQSGetFirstStandardTest",
+        "Please refer to the testing code at function: testPQGetNextStandardTest",
+        "Please refer to the testing code at function: testPQGetNextTraversesTheQueueCorrectlyByPriority",
+        "Please refer to the testing code at function: testPQClearStandardTest",
+        "Please refer to the testing code at function: testPQClearWorksOkayOnEmptyQueue"
 };
 
 
-#define NUMBER_TESTS 36
+#define NUMBER_TESTS 39
 
 int main(int argc, char** argv) {
     if (argc == 1) {

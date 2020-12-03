@@ -137,6 +137,8 @@ PriorityQueue pqCopy(PriorityQueue queue)
         return NULL;
     }
 
+    queue->iterator = NULL;
+
     PriorityQueue newPQ = pqCreate(queue->copy_element, queue->free_element, queue->equal_elements,
         queue->copy_priority, queue->free_priority, queue->compare_priorities);
 
@@ -204,6 +206,8 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     {
         return PQ_NULL_ARGUMENT;
     }
+
+    queue->iterator = NULL;
 
     PQElement copyElement = queue->copy_element(element);
     PQElementPriority copyPriority = queue->copy_priority(priority);
@@ -336,16 +340,25 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
 
     if (!copyElement)
     {
+        queue->free_element(copyElement);
+        queue->free_priority(copyPriority);
+
         return PQ_OUT_OF_MEMORY;
     }
 
     if (!copyPriority)
     {
+        queue->free_element(copyElement);
+        queue->free_priority(copyPriority);
+
         return PQ_OUT_OF_MEMORY;
     }
 
     if (!(pqContains(queue, element)))
     {
+        queue->free_element(copyElement);
+        queue->free_priority(copyPriority);
+
         return PQ_ELEMENT_DOES_NOT_EXISTS;
     }
 
@@ -365,6 +378,9 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
 
         if (currentNode == NULL || currentNode->next == NULL)
         {
+            queue->free_element(copyElement);
+            queue->free_priority(copyPriority);
+
             return PQ_ELEMENT_DOES_NOT_EXISTS;
         }
     }
@@ -385,6 +401,9 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
 
     pqInsert(queue, copyElement, copyPriority);
 
+    queue->free_element(copyElement);
+    queue->free_priority(copyPriority);
+
     return PQ_SUCCESS;
 }
 
@@ -394,6 +413,8 @@ PriorityQueueResult pqRemove(PriorityQueue queue)
     {
         return PQ_NULL_ARGUMENT;
     }
+    
+    queue->iterator = NULL;
 
     if (queue->node == NULL)
     {
@@ -420,6 +441,8 @@ PriorityQueueResult pqRemoveElement(PriorityQueue queue, PQElement element)
     {
         return PQ_NULL_ARGUMENT;
     }
+
+    queue->iterator = NULL;
 
     if (!(pqContains(queue, element)))
     {

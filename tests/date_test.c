@@ -333,7 +333,7 @@ const char* testNames[] = {
 int main(int argc, char** argv) {
     if (argc == 1) {
         for (int test_idx = 0; test_idx < NUMBER_TESTS; test_idx++) {
-            RUN_TEST(tests[test_idx], testNames[test_idx]);
+            RUN_TEST(tests[test_idx], testNames[test_idx], 0);
         }
         return 0;
     }
@@ -348,7 +348,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    RUN_TEST(tests[test_idx - 1], testNames[test_idx - 1]);
+    RUN_TEST(tests[test_idx - 1], testNames[test_idx - 1], 0);
     return 0;
 
 }
