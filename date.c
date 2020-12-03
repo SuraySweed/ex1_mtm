@@ -42,7 +42,7 @@ static int dateToDays(Date date)
 
 static int dateDifference(Date date1, Date date2)
 {
-    assert(isDayValid(date1) && isDateValid(date2));
+    assert(isDateValid(date1) && isDateValid(date2));
 
     int days1 = dateToDays(date1);
     int days2 = dateToDays(date2);
@@ -67,6 +67,11 @@ Date dateCreate(int day, int month, int year)
     date->day = day;
     date->month = month;
     date->year = year;
+
+    if (!(isDateValid(date)))
+    {
+        return NULL;
+    }
 
     return date;
 }
