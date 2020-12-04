@@ -15,7 +15,7 @@ struct PriorityQueue_t {
     Node node;
     int elements_counter;
     int currentNodeNumber;
-    PQElement iterator; //*******
+    PQElement iterator; 
 
     /* Elemetn operations */
     CopyPQElement copy_element;
@@ -65,13 +65,13 @@ static void nodesDestroy(PriorityQueue queue)
 
     while (nodeDelete)
     {
-        //Node toDelete = nodeDelete;
         queue->free_element(nodeDelete->elementNode);
         queue->free_priority(nodeDelete->elementPriorityNode);
         nodeDelete = nodeDelete->next;
     }
 
     nodeDelete = queue->node;
+    
     while (nodeDelete)
     {
         Node toDelete = nodeDelete;
@@ -99,9 +99,6 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
         return NULL;
     }
 
-    //Node node = createNode();
-
-    //priority_queue->node = node;
     priority_queue->node = NULL;
     priority_queue->elements_counter = 0;
     priority_queue->currentNodeNumber = 0;
@@ -157,18 +154,6 @@ PriorityQueue pqCopy(PriorityQueue queue)
 
     newPQ->node = copyNode;
 
-    /*
-    newPQ->node = newPQHead;
-
-    while (currentNode)
-    {
-        copyNode->elementNode = queue->copy_element(currentNode->elementNode);
-        copyNode->elementPriorityNode = queue->copy_priority(currentNode->elementPriorityNode);
-
-        copyNode->next = NULL;
-        currentNode = currentNode->next;
-    }
-    */
     return newPQ;
 }
 
@@ -223,7 +208,6 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     }
 
     Node head = queue->node;
-    //Node start = queue->node;
 
     Node nodeAdd = createNode();
     nodeAdd->elementNode = copyElement;
@@ -278,50 +262,6 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
         }
     }
 
-
-    /*
-    else if ( (queue->compare_priorities(priority, head->elementPriorityNode)) > ZERO)
-    {
-        nodeAdd->next = head;
-        head = nodeAdd;
-        queue->elements_counter++;
-        // link the head to queue
-        return PQ_SUCCESS;
-    }
-
-    else
-    {
-        while (queue->compare_priorities(priority, head->elementPriorityNode) <= ZERO && head->next != NULL)
-        {
-            head = head->next;
-        }
-        if (head->next)
-        {
-            if (head->next->next)
-            {
-                Node temp = head->next->next;
-                head->next = nodeAdd;
-                nodeAdd->next = temp;
-                queue->elements_counter++;
-                return PQ_SUCCESS;
-            }
-            else
-            {
-                head->next = nodeAdd;
-                queue->elements_counter++;
-                nodeAdd->next = NULL;
-                return PQ_SUCCESS;
-            }
-        }
-        else
-        {
-            head->next = nodeAdd;
-            queue->elements_counter++;
-            nodeAdd->next = NULL;
-            return PQ_SUCCESS;
-        }
-    }
-    */
     return PQ_SUCCESS;
 }
 
@@ -333,7 +273,6 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
         return 	PQ_NULL_ARGUMENT;
     }
 
-    //new iterator
     queue->iterator = NULL;
     PQElement copyElement = queue->copy_element(element);
     PQElementPriority copyPriority = queue->copy_priority(new_priority);
@@ -365,14 +304,11 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
     Node currentNode = queue->node;
     Node tempNode = queue->node;
 
-    /*
-    while (!(queue->equal_elements(currentNode->elementNode, element))
-        && !(queue->compare_priorities(currentNode->elementPriorityNode, old_priority)))
-    */
+ 
     while ((queue->compare_priorities(currentNode->elementPriorityNode, old_priority)) != 0
         && !(queue->equal_elements(currentNode->elementNode, element)))
     {
-        // if we exit the loop, so currentNode is the node that we have to change it
+        // if we exit the loop, currentNode is the node that we have to change it
         tempNode = currentNode;
         currentNode = currentNode->next;
 
@@ -535,20 +471,19 @@ PriorityQueueResult pqClear(PriorityQueue queue)
     }
 
     Node currentNode = queue->node;
-    //Node toDelete = currentNode;
 
     queue->elements_counter = 0;
 
     while (currentNode)
     {
-        Node toDelete = currentNode; //new
+        Node toDelete = currentNode; 
         queue->free_element(currentNode->elementNode);
         queue->free_priority(currentNode->elementPriorityNode);
         currentNode = currentNode->next;
 
         free(toDelete);
     }
-    //new
+    
     queue->node = NULL;
     queue->elements_counter = 0;
     queue->currentNodeNumber = 0;
