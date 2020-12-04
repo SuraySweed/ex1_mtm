@@ -312,7 +312,7 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
         tempNode = currentNode;
         currentNode = currentNode->next;
 
-        if (currentNode == NULL || currentNode->next == NULL)
+        if (currentNode == NULL || (currentNode->next == NULL && queue->elements_counter >= 2))
         {
             queue->free_element(copyElement);
             queue->free_priority(copyPriority);
@@ -321,18 +321,24 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
         }
     }
 
-    tempNode->next = currentNode->next;
+    if (queue->node == currentNode)
+    {
+        queue->node = currentNode->next;
+    }
+    else
+    {
+        tempNode->next = currentNode->next;
+    }
 
     queue->free_element(currentNode->elementNode);
-    queue->free_priority(currentNode->elementPriorityNode);
-
+    queue->free_priority(currentNode->elementPriorityNode);    
     free(currentNode);
-    
+
     if (queue->elements_counter == 1)
     {
         queue->node = NULL;
     }
-
+        
     queue->elements_counter--;
 
     pqInsert(queue, copyElement, copyPriority);
