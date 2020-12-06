@@ -3,11 +3,16 @@
 
 #include "date.h"
 #include "priority_queue.h"
+#include "event_members.h"
 
 typedef PriorityQueue Events;
 
-typedef struct EventElement_t *EventElement; //PQElement
-typedef Date EventDate; // PQElementPriority
+typedef struct EventsElement_t* EventsElement;
+Events createEvents();
 
+bool changeDateInElementInEvents(Events events, Date date, int id);
+
+//PQElement createEventElement(char *name, int id, Date date);
+void destroyEvents(Events events);
 
 #endif //EVENTS_H

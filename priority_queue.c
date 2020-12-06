@@ -312,7 +312,7 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
         tempNode = currentNode;
         currentNode = currentNode->next;
 
-        if (currentNode == NULL || (currentNode->next == NULL && queue->elements_counter >= 2))
+        if (currentNode == NULL || (currentNode->next == NULL && queue->elements_counter > 2))
         {
             queue->free_element(copyElement);
             queue->free_priority(copyPriority);
