@@ -12,6 +12,8 @@ Events createEvents();
 
 bool changeDateInElementInEvents(Events events, Date date, int id);
 
+EventsElement createEventsElement(char* name,int id, Date date, EventMembers event_members);
+
 //PQElement createEventElement(char *name, int id, Date date);
 void destroyEvents(Events events);
 
