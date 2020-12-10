@@ -116,12 +116,66 @@ Events createEvents()
     return events;
 }
 
+char* getEventName(EventsElement event_element)
+{
+    if(!event_element)
+    {
+        return NULL;
+    }
+
+    return event_element->name;
+}
+
+Date getEventDate(EventsElement event_element)
+{
+    if (!event_element)
+    {
+        return NULL;
+    }
+
+    return event_element->date;
+}
+
+EventsElement getEventByEventId(Events events, int id)
+{
+    if (!events)
+    {
+        return NULL;
+    }
+    
+    EventsElement event_element = malloc(sizeof(*event_element));
+    if (!event_element)
+    {
+        return NULL;
+    }
+
+    event_element = pqGetFirst(events);
+    
+    if (event_element->id == id)
+    {
+        return event_element;
+    }
+
+    while (event_element->id != id)
+    {
+        event_element = pqGetNext(events);
+        if (event_element->id == id)
+        {
+            return event_element;
+        }
+    }
+
+    return NULL;
+}
+
 bool changeDateInElementInEvents(Events events, Date date, int id)
 {
     if (!events || !date)
     {
         return NULL;
     }
+
+    bool is_found = true;
 
     EventsElement found_element = malloc(sizeof(*found_element));
     found_element = ((EventsElement)pqGetFirst(events));
@@ -166,6 +220,7 @@ EventsElement createEventsElement(char* name, int id, Date date, EventMembers ev
     if (!(event_element->name))
     {
         freeElementStructGeneric(event_element);
+        return NULL;
     }
    
     strncpy(event_element->name, name, name_length + 1);
@@ -181,4 +236,3 @@ void destroyEvents(Events events)
 {
     pqDestroy(events);
 }
-
