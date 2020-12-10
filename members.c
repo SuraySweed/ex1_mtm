@@ -6,7 +6,7 @@
 #include <string.h>
 
 struct MembersElement_t {
-	char* name ;
+	char* name;
 	int id;
 	int events_counter;
 };
@@ -72,11 +72,11 @@ static PQElementPriority copyElementPriorityIntGeneric(PQElementPriority element
 
 static bool equalMembersElementsStructGeneric(PQElement member1_element, PQElement member2_element)
 {
-	bool is_equal_name = !strcmp(((MembersElement)member1_element)->name, ((MembersElement)member2_element)->name);
+	//bool is_equal_name = !strcmp(((MembersElement)member1_element)->name, ((MembersElement)member2_element)->name);
 	bool is_equal_id = ((MembersElement)member1_element)->id == ((MembersElement)member2_element)->id;
 	//int events_counter_compare = ((MembersElement)member1_element)->events_counter - ((MembersElement)member2_element)->events_counter;
 
-	return (is_equal_name && is_equal_id);//&& !events_counter_compare)
+	return (is_equal_id); //&& is_equal_id);//&& !events_counter_compare)
 }
 
 static int compareMembersPriorityIntGeneric(PQElementPriority member1_priority, PQElementPriority member2_priority)
@@ -100,9 +100,9 @@ Members createMembers()
 	return members;
 }
 
-MembersElement createElementStruct(Members members, char* name, int id,int events_counter)
+MembersElement createMemberElement(char* name, int id, int events_counter)
 {
-	if (!members || !name)
+	if (!name)
 	{
 		return NULL;
 	}
@@ -113,9 +113,12 @@ MembersElement createElementStruct(Members members, char* name, int id,int event
 	{
 		return NULL;
 	}
+
 	int length = strlen(name);
+	
 	build_element->name = malloc(sizeof(char*) * length + 1);
 	strcpy(build_element->name, name);
+	
 	build_element->id = id;
 	build_element->events_counter = events_counter;
 
@@ -150,6 +153,40 @@ bool changeCounterInElement(Members members, int id, int new_counter)
 	}
 
 	return false;
+}
+
+MembersElement getMemberById(Members members, int id)
+{
+	if (!members)
+	{
+		return NULL;
+	}
+
+	MembersElement member_element = malloc(sizeof(*member_element));
+
+	if (!member_element)
+	{
+		return NULL;
+	}
+
+	member_element = pq(pqGetFirst(members));
+
+	if (member_element->id == id)
+	{
+		return member_element;
+	}
+
+	while (member_element->id != id)
+	{
+		member_element = pqGetNext(members);
+		if (member_element->id == id)
+		{
+			return member_element;
+		}
+	}
+
+	return NULL;
+
 }
 
 void  destroyMembers(Members members)

@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "event_manager.h"
 #include "priority_queue.h"
+#include "date.h"
 #include "events.h"
 #include "members.h"
 #include "event_members.h"
-#include "date.h"
 
 #define ZERO 0
 
@@ -121,7 +122,7 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
         return EM_EVENT_ALREADY_EXISTS;
     }
 
-    if (pqContains(em->events, getEventByEventId(event_id)));
+    if (pqContains(em->events, getEventByEventId(em->events, event_id)))
     {
         return EM_EVENT_ID_ALREADY_EXISTS;
     }
@@ -141,14 +142,12 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
 
 EventManagerResult emAddEventByDiff(EventManager em, char* event_name, int days, int event_id)
 {
-    Date new_date = malloc(sizeof(*new_date));
-    
+    Date new_date = dateCopy(em->current_date);
+
     if (!new_date)
     {
         return NULL;
     }
-
-    new_date = dateCopy(em->current_date);
 
     // add days to the current event, and save the new date in new_date
     for (int current = 0; current < days; current++)
@@ -198,8 +197,87 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
         return EM_INVALID_EVENT_ID;
     }
     
+    EventsElement event = getEventByEventId(em->events, event_id);
+
+    if (!event)
+    {
+        return EM_OUT_OF_MEMORY;
+    }
+
+    if (!pqContains(em->current_date, event))
+    {
+        return EM_EVENT_NOT_EXISTS;
+    }
+
+    if (EventsContainEventNameInDate(em, new_date, getEventName(event)))
+    {
+        return EM_EVENT_ALREADY_EXISTS;
+    }
 
 
+    pqChangePriority(em->events, event, getEventDate(event) , new_date);
+    
+    return EM_SUCCESS;
+}
+
+EventManagerResult emAddMember(EventManager em, char* member_name, int member_id)
+{
+    if (!em || !member_name)
+    {
+        return EM_NULL_ARGUMENT;
+    }
+
+    if (!isValidId(member_id))
+    {
+        return EM_INVALID_MEMBER_ID;
+    }
+
+    if (getMemberById(em->members, member_id))
+    {
+        return EM_MEMBER_ID_ALREADY_EXISTS;
+    }
+
+    MembersElement member_element = createMemberElement(member_name, member_id, 0);
+
+    if (!member_element)
+    {
+        destroyEventManager(em);
+        return EM_OUT_OF_MEMORY;
+    }
+
+    pqInsert(em->members, member_element, 0);
+
+    return EM_SUCCESS;
+}
+
+EventManagerResult emAddMemberToEvent(EventManager em, int member_id, int event_id)
+{
+    if (!em)
+    {
+        return EM_NULL_ARGUMENT;
+    }
+
+    if (!isValidId(event_id))
+    {
+        return EM_INVALID_EVENT_ID;
+    }
+
+    if (!isValidId(member_id))
+    {
+        return EM_INVALID_MEMBER_ID;
+    }
+
+    if (!getMemberById(em->members, member_id))
+    {
+        return EM_MEMBER_ID_NOT_EXISTS;
+    }
+
+    if (!getEventByEventId(em->events, event_id))
+    {
+        return EM_EVENT_ID_NOT_EXISTS;
+    }
+
+    //TODO
 }
 
 

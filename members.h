@@ -9,8 +9,9 @@ typedef struct MembersElement_t* MembersElement;
 Members createMembers();
 
 bool changeCounterInElement(Members members, int id, int new_counter);
+MembersElement getMemberById(Members members, int id);
 
-MembersElement createElementStruct(Members members, char* name, int id, int events_counter);
+MembersElement createMemberElement(char* name, int id, int events_counter);
 
 void destroyMembers(Members members);
 
