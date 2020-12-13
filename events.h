@@ -4,6 +4,7 @@
 #include "date.h"
 #include "priority_queue.h"
 #include "event_members.h"
+#include "members.h"
 
 typedef PriorityQueue Events;
 
@@ -13,11 +14,14 @@ Events createEvents();
 char* getEventName(EventsElement event_element);
 Date getEventDate(EventsElement event_element);
 EventsElement getEventByEventId(Events events, int id);
+EventMembers getEventMembersByEvent(EventsElement event);
 bool changeDateInElementInEvents(Events events, Date date, int id);
 
-EventsElement createEventsElement(char* name,int id, Date date, EventMembers event_members);
+bool removeOccursEvents(Members members, Events events, Date current_date);
 
-//PQElement createEventElement(char *name, int id, Date date);
+EventsElement createEventsElement(char* name, int id, Date date, EventMembers event_members);
+
+void destroyEventElement(EventsElement event_element);
 void destroyEvents(Events events);
 
 #endif //EVENTS_H

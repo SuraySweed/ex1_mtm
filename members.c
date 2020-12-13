@@ -5,10 +5,19 @@
 #include"priority_queue.h"
 #include <string.h>
 
+#define ZERO 0
+#define NEGATIVE -1
+#define POSITIVE 1
+
 struct MembersElement_t {
 	char* name;
 	int id;
 	int events_counter;
+};
+
+struct MembersPriority_t {
+	int events_counter;
+	int member_id;
 };
 
 
@@ -20,9 +29,11 @@ static void freeMembersElementsStructGeneric(PQElement element_struct)
 	free(element_struct);
 }
 
-static void freeMembersPriorityIntGeneric(PQElementPriority events_counter)
+static void freeMembersPriorityStructGeneric(PQElementPriority priority_struct)
 {
-	free(events_counter);
+	//free(((MembersPriority)priority_struct)->events_counter);
+	//free(((MembersPriority)priority_struct)->member_id);
+	free(priority_struct);
 }
 
 static PQElement copyMembersElementStructGeneric(PQElement element_struct)
@@ -38,7 +49,7 @@ static PQElement copyMembersElementStructGeneric(PQElement element_struct)
 	{
 		return NULL;
 	}
-	copy_element->name = malloc((sizeof(char) * (strlen(((MembersElement)element_struct)->name)) + 1));
+	copy_element->name = malloc(((sizeof(char) * (strlen(((MembersElement)element_struct)->name))) + 1));
 	if (!copy_element->name)
 	{
 		freeMembersElementsStructGeneric(copy_element);
@@ -51,23 +62,24 @@ static PQElement copyMembersElementStructGeneric(PQElement element_struct)
 	return copy_element;
 }
 
-static PQElementPriority copyElementPriorityIntGeneric(PQElementPriority element_priority)
+static PQElementPriority copyElementPriorityStructGeneric(PQElementPriority element_priority)
 {
 	if (!element_priority)
 	{
 		return NULL;
 	}
 
-	int* copy_element_priority = malloc(sizeof(*copy_element_priority));
+	MembersPriority copy_member_priority = malloc(sizeof(*copy_member_priority));
 
-	if (!copy_element_priority)
+	if (!copy_member_priority)
 	{
 		return NULL;
 	}
 
-	*copy_element_priority = *(int*)element_priority;
+	copy_member_priority->events_counter = ((MembersPriority)element_priority)->events_counter;
+	copy_member_priority->member_id = ((MembersPriority)element_priority)->member_id;
 
-	return copy_element_priority;
+	return copy_member_priority;
 }
 
 static bool equalMembersElementsStructGeneric(PQElement member1_element, PQElement member2_element)
@@ -79,13 +91,24 @@ static bool equalMembersElementsStructGeneric(PQElement member1_element, PQEleme
 	return (is_equal_id); //&& is_equal_id);//&& !events_counter_compare)
 }
 
-static int compareMembersPriorityIntGeneric(PQElementPriority member1_priority, PQElementPriority member2_priority)
+static int compareMembersPriorityGeneric(PQElementPriority member1_priority, PQElementPriority member2_priority)
 {
-	int priority_compare = *(int*)member1_priority - *(int*)member2_priority;
-
-	return priority_compare;
+	if (((MembersPriority)member1_priority)->events_counter - ((MembersPriority)member2_priority)->events_counter > ZERO)
+	{
+		return POSITIVE;
+	}
+	
+	else if ( (((MembersPriority)member2_priority)->events_counter) -
+		(((MembersPriority)member1_priority)->events_counter) == ZERO)
+	{
+		return ((MembersPriority)member2_priority)->member_id -
+			((MembersPriority)member1_priority)->member_id;
+	}
+	else
+	{
+		return NEGATIVE;
+	}
 }
-
 
 
 Members createMembers()
@@ -93,9 +116,9 @@ Members createMembers()
 	Members members = pqCreate(copyMembersElementStructGeneric,
 		freeMembersElementsStructGeneric,
 		equalMembersElementsStructGeneric,
-		copyElementPriorityIntGeneric,
-		freeMembersPriorityIntGeneric,
-		compareMembersPriorityIntGeneric);
+		copyElementPriorityStructGeneric,
+		freeMembersPriorityStructGeneric,
+		compareMembersPriorityGeneric);
 
 	return members;
 }
@@ -115,14 +138,29 @@ MembersElement createMemberElement(char* name, int id, int events_counter)
 	}
 
 	int length = strlen(name);
-	
+
 	build_element->name = malloc(sizeof(char*) * length + 1);
 	strcpy(build_element->name, name);
-	
+
 	build_element->id = id;
 	build_element->events_counter = events_counter;
 
 	return build_element;
+}
+
+MembersPriority createMemberPriority(int events_counter, int member_id)
+{
+	MembersPriority build_priority = malloc(sizeof(*build_priority));
+
+	if (!build_priority)
+	{
+		return NULL;
+	}
+
+	build_priority->events_counter = events_counter;
+	build_priority->member_id = member_id;
+
+	return build_priority;
 }
 
 bool changeCounterInElement(Members members, int id, int new_counter)
@@ -157,7 +195,7 @@ bool changeCounterInElement(Members members, int id, int new_counter)
 
 MembersElement getMemberById(Members members, int id)
 {
-	if (!members)
+	if (pqGetSize(members) == 0) 
 	{
 		return NULL;
 	}
@@ -169,24 +207,82 @@ MembersElement getMemberById(Members members, int id)
 		return NULL;
 	}
 
-	member_element = pq(pqGetFirst(members));
+	member_element = pqGetFirst(members);
 
 	if (member_element->id == id)
 	{
 		return member_element;
 	}
 
-	while (member_element->id != id)
+	while (member_element && member_element->id != id)
 	{
 		member_element = pqGetNext(members);
-		if (member_element->id == id)
+		if (member_element && member_element->id == id)
 		{
 			return member_element;
 		}
 	}
-
 	return NULL;
+}
 
+char* getMemberNameByMember(MembersElement member)
+{
+	if (!member)
+	{
+		return NULL;
+	}
+
+	return member->name;
+}
+
+int getEventsCounterInMember(MembersElement member)
+{
+	if (!member)
+	{
+		return 0;
+	}
+
+	return member->events_counter;
+}
+
+int getMemberIdByMember(MembersElement member)
+{
+	return member->id;
+}
+
+void addEventsCounterInMember(MembersElement member)
+{
+	if (!member)
+	{
+		return;
+	}
+
+	member->events_counter = member->events_counter + 1;
+}
+
+void subEventsCounterInMember(MembersElement member)
+{
+	if (!member)
+	{
+		return;
+	}
+
+	member->events_counter = member->events_counter - 1;
+}
+
+void destroyMembersElement(MembersElement members_element)
+{
+	if (!members_element)
+	{
+		return;
+	}
+
+	freeMembersElementsStructGeneric(members_element);
+}
+
+void destroyMemberPriority(MembersPriority member_priority)
+{
+	free(member_priority);
 }
 
 void  destroyMembers(Members members)
