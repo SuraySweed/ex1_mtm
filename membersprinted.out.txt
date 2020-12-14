@@ -1,0 +1,4 @@
+nesi,4
+andrey,2
+eric,1
+alex,1

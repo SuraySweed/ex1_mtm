@@ -198,7 +198,22 @@ EventManagerResult emRemoveEvent(EventManager em, int event_id)
         return EM_EVENT_NOT_EXISTS;
     }
 
-    pqRemoveElement(em->events, getEventByEventId(em->events, event_id));
+    EventMembers event_members = getEventMembersByEvent(getEventByEventId(em->events, event_id));
+    EventMemberElement event_member_element = pqGetFirst(event_members);
+    
+    int member_id = 0;
+
+    while (event_member_element)
+    {
+        member_id = getIdByEventMemberElement(event_member_element);
+
+        changeMemberCounterPriorityWhenRemoveEvent(em->members, member_id);
+        subEventsCounterInMember(getMemberById(em->members, member_id));
+        
+        event_member_element = pqGetNext(event_members);
+    }
+
+    pqRemoveElement(em->events, getEventByEventId(em->events, event_id));    
 
     return EM_SUCCESS;
 }
@@ -594,5 +609,4 @@ void emPrintAllResponsibleMembers(EventManager em, const char* file_name)
     destroyMembersElement(current_member);
     fclose(stream);
 }
-
 

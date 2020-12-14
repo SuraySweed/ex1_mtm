@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "event_manager.h"
-#include "date.h"
+#include "../event_manager.h"
+#include "../date.h"
 
 #define OK_EVENT_NAME "event_name"
 #define OK_EVENT_ID 50
@@ -1101,7 +1101,8 @@ destroyRemoveEventsAndMembers:
     return result;
 }
 
-/* ========== TESTING testEMPrintAllEventsMembersTests ========== */
+/*
+ //========== TESTING testEMPrintAllEventsMembersTests ========== 
 bool testEMPrintAllEventsMembersTests_CreatorLiranLavi() {
     bool result = true;
     Date date = NULL;
@@ -1115,7 +1116,8 @@ bool testEMPrintAllEventsMembersTests_CreatorLiranLavi() {
 
     char expected_events[20000] = "";
     char expected_members[20000] = "";
-    char str[20] = "";
+    char *str = malloc(21);
+
     for (int i = 0; i < 50; i++) {
         //sprintf(event_name, "event%d", i);
         ASSERT_TEST(emAddEventByDiff(em, event_name, i, i) == EM_SUCCESS, destroy);
@@ -1152,6 +1154,7 @@ destroy:
     destroyEventManager(em);
     return result;
 }
+*/
 
 #define TEST_NAMES \
     X(testEMCreateStandardTest) \
@@ -1187,8 +1190,8 @@ destroy:
     X(testEMPrintAllEventsBasicTests) \
     X(testBigEventManager_CreatorYanTomsinsky) \
     X(testChangeDate_CreatorAdar) \
-    X(testRemoveEventsAndMembers_CreatorAdar) \
-    X(testEMPrintAllEventsMembersTests_CreatorLiranLavi)
+    X(testRemoveEventsAndMembers_CreatorAdar) 
+    //X(testEMPrintAllEventsMembersTests_CreatorLiranLavi)
 
 
 bool (*tests[])(void) = {
@@ -1203,7 +1206,7 @@ const char* testNames[] = {
 #undef X
 };
 
-#define NUMBER_TESTS 35
+#define NUMBER_TESTS 34
 
 int main(int argc, char** argv) {
     if (argc == 1) {

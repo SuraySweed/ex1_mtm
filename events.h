@@ -17,6 +17,7 @@ EventsElement getEventByEventId(Events events, int id);
 EventMembers getEventMembersByEvent(EventsElement event);
 bool changeDateInElementInEvents(Events events, Date date, int id);
 
+void changeMemberCounterPriorityWhenRemoveEvent(Members members, int member_id);
 bool removeOccursEvents(Members members, Events events, Date current_date);
 
 EventsElement createEventsElement(char* name, int id, Date date, EventMembers event_members);

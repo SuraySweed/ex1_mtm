@@ -1,0 +1,5 @@
+yan1,4
+yan5,3
+yan2,2
+yan3,1
+yan4,1

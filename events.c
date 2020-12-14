@@ -194,6 +194,25 @@ bool changeDateInElementInEvents(Events events, Date date, int id)
     return false;
 }
 
+void changeMemberCounterPriorityWhenRemoveEvent(Members members, int member_id)
+{
+    MembersElement member_element =
+        createMemberElement(getMemberNameByMember(getMemberById(members, member_id)), member_id,
+            getEventsCounterInMember(getMemberById(members, member_id)));
+
+    MembersPriority member_priority =
+        createMemberPriority(getEventsCounterInMember(getMemberById(members, member_id)),
+            getMemberIdByMember(getMemberById(members, member_id)));
+
+
+    MembersPriority new_member_priority =
+        createMemberPriority((getEventsCounterInMember(getMemberById(members, member_id)) - 1),
+            getMemberIdByMember(getMemberById(members, member_id)));
+
+
+    pqChangePriority(members, member_element, member_priority, new_member_priority);
+}
+
 bool removeOccursEvents(Members members, Events events, Date current_date)
 {
     if (!members || !events || !current_date)
@@ -225,15 +244,13 @@ bool removeOccursEvents(Members members, Events events, Date current_date)
 
         while (event_member_element)
         {
-            member_id = getIdByEventMemberElement(event_member_element);
-            subEventsCounterInMember(getMemberById(members, member_id));
-            event_member_element = pqGetNext(getEventMembersByEvent(current_event));
-
             
+            member_id = getIdByEventMemberElement(event_member_element);
+
+            /*
             MembersElement member_element = 
-                createMemberElement(getMemberNameByMember(getMemberById(members, member_id))
-                ,getMemberIdByMember(getMemberById(members, member_id)),
-                getEventsCounterInMember(getMemberById(members, member_id)));
+                createMemberElement(getMemberNameByMember(getMemberById(members, member_id)) , member_id, 
+                  getEventsCounterInMember(getMemberById(members, member_id)));
             
             MembersPriority member_priority =
                 createMemberPriority(getEventsCounterInMember(getMemberById(members, member_id)),
@@ -244,8 +261,15 @@ bool removeOccursEvents(Members members, Events events, Date current_date)
                 createMemberPriority((getEventsCounterInMember(getMemberById(members, member_id)) - 1),
                     getMemberIdByMember(getMemberById(members, member_id)));
 
+
             pqChangePriority(members, member_element, member_priority, new_member_priority);
-            
+            */
+
+            changeMemberCounterPriorityWhenRemoveEvent(members, member_id);
+            subEventsCounterInMember(getMemberById(members, member_id));
+
+            event_member_element = pqGetNext(getEventMembersByEvent(current_event));
+
         }
         pqRemove(events);
         current_event = pqGetFirst(events);

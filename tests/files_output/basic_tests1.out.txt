@@ -1,0 +1,4 @@
+event1,2.1.2000,member1,member2,member3
+event4,2.1.2000
+event2,3.1.2000,member1,member3
+event3,3.1.2000,member1
