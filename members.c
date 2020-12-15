@@ -84,11 +84,9 @@ static PQElementPriority copyElementPriorityStructGeneric(PQElementPriority elem
 
 static bool equalMembersElementsStructGeneric(PQElement member1_element, PQElement member2_element)
 {
-	//bool is_equal_name = !strcmp(((MembersElement)member1_element)->name, ((MembersElement)member2_element)->name);
 	bool is_equal_id = ((MembersElement)member1_element)->id == ((MembersElement)member2_element)->id;
-	//int events_counter_compare = ((MembersElement)member1_element)->events_counter - ((MembersElement)member2_element)->events_counter;
 
-	return (is_equal_id); //&& is_equal_id);//&& !events_counter_compare)
+	return (is_equal_id); 
 }
 
 static int compareMembersPriorityGeneric(PQElementPriority member1_priority, PQElementPriority member2_priority)
@@ -170,8 +168,13 @@ bool changeCounterInElement(Members members, int id, int new_counter)
 		return NULL;
 	}
 
-	MembersElement found_element = malloc(sizeof(*found_element));
-	found_element = ((MembersElement)pqGetFirst(members));
+	MembersElement found_element = pqGetFirst(members); // malloc(sizeof(*found_element));
+	//found_element = ((MembersElement)pqGetFirst(members));
+
+	if (!found_element)
+	{
+		return false;
+	}
 
 	if (found_element->id == id)
 	{
@@ -200,14 +203,14 @@ MembersElement getMemberById(Members members, int id)
 		return NULL;
 	}
 
-	MembersElement member_element = malloc(sizeof(*member_element));
+	MembersElement member_element = pqGetFirst(members);// malloc(sizeof(*member_element));
 
 	if (!member_element)
 	{
 		return NULL;
-	}
+	}	
 
-	member_element = pqGetFirst(members);
+	//member_element = pqGetFirst(members);
 
 	if (member_element->id == id)
 	{

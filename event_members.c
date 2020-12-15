@@ -23,7 +23,7 @@ static void freeElementStructGeneric(PQElement element_struct)
 
 static void freePriorityElementIntGeneric(PQElementPriority id)
 {
-    //free(id);
+    free(id);
 }
 
 static PQElement copyStructElementGeneric(PQElement element_struct)
@@ -65,12 +65,12 @@ static PQElementPriority copyIntPriorityElementGeneric(PQElementPriority id)
     }
 
     int* copy = malloc(sizeof(*copy));
-
+    
     if (!copy)
     {
         return NULL;
     }
-
+    
     *copy = *(int*)id;
 
     return copy;

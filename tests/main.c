@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "../event_manager.h"
-#include "../date.h"
+#include "event_manager.h"
+#include "date.h"
 
 #define OK_EVENT_NAME "event_name"
 #define OK_EVENT_ID 50
@@ -1101,8 +1101,8 @@ destroyRemoveEventsAndMembers:
     return result;
 }
 
+/* ========== TESTING testEMPrintAllEventsMembersTests ========== */
 /*
- //========== TESTING testEMPrintAllEventsMembersTests ========== 
 bool testEMPrintAllEventsMembersTests_CreatorLiranLavi() {
     bool result = true;
     Date date = NULL;
@@ -1116,8 +1116,7 @@ bool testEMPrintAllEventsMembersTests_CreatorLiranLavi() {
 
     char expected_events[20000] = "";
     char expected_members[20000] = "";
-    char *str = malloc(21);
-
+    char str[20] = "";
     for (int i = 0; i < 50; i++) {
         //sprintf(event_name, "event%d", i);
         ASSERT_TEST(emAddEventByDiff(em, event_name, i, i) == EM_SUCCESS, destroy);
@@ -1149,12 +1148,141 @@ bool testEMPrintAllEventsMembersTests_CreatorLiranLavi() {
     emPrintAllResponsibleMembers(em, "liran_members.out.txt");
     ASSERT_TEST(isFilePrintOutputCorrect("liran_members.out.txt", expected_members), destroy);
 
-destroy:
+    destroy:
     dateDestroy(date);
     destroyEventManager(em);
     return result;
 }
 */
+
+bool checkNegativeDate_CreatorAdam() {
+    bool result = true;
+    Date startDate = dateCreate(1, 1, -100);
+    Date date1 = dateCreate(2, 1, -100);
+    Date date2 = dateCreate(30, 12, -101);
+    Date date3 = dateCreate(1, 1, 0);
+    EventManager em = createEventManager(startDate);
+    ASSERT_TEST(emAddEventByDate(em, "event1", date1, 0) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddEventByDate(em, "event2", date2, 1) == EM_INVALID_DATE, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddEventByDate(em, "event3", date3, 2) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMember(em, "member1", 0) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMember(em, "member2", 1) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 0, 0) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 1, 2) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 0, 2) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    emPrintAllResponsibleMembers(em, "negative_date_test_members.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("negative_date_test_members.out.txt", "member1,2\nmember2,1\n"),
+        destroyRemoveEventsAndMembers);
+    emPrintAllEvents(em, "negative_date_test_events.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("negative_date_test_events.out.txt",
+        "event1,2.1.-100,member1\nevent3,1.1.0,member1,member2\n"),
+        destroyRemoveEventsAndMembers);
+
+destroyRemoveEventsAndMembers:
+    dateDestroy(startDate);
+    dateDestroy(date1);
+    dateDestroy(date2);
+    dateDestroy(date3);
+    destroyEventManager(em);
+    return result;
+}
+
+bool testNegativeYearTwo_CreatorAdam() {
+    bool result = true;
+    Date startDate = dateCreate(1, 1, -100);
+    EventManager em = createEventManager(startDate);
+    Date date = NULL;
+    for (int i = 0; i < 10; i++) {
+        ASSERT_TEST(emAddEventByDiff(em, "event", i, i) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+        ASSERT_TEST(emAddMember(em, "member", i) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+        ASSERT_TEST(emAddMemberToEvent(em, i, i) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    }
+    emPrintAllEvents(em, "expectedAllEvents1.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedAllEvents1.out.txt", "event,1.1.-100,member\n"
+        "event,2.1.-100,member\n"
+        "event,3.1.-100,member\n"
+        "event,4.1.-100,member\n"
+        "event,5.1.-100,member\n"
+        "event,6.1.-100,member\n"
+        "event,7.1.-100,member\n"
+        "event,8.1.-100,member\n"
+        "event,9.1.-100,member\n"
+        "event,10.1.-100,member\n"),
+        destroyRemoveEventsAndMembers);
+    emTick(em, 4);
+    emPrintAllResponsibleMembers(em, "expectedAllMembers2.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedAllMembers2.out.txt", "member,1\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"), destroyRemoveEventsAndMembers);
+
+    ASSERT_TEST(emRemoveMemberFromEvent(em, 4, 3) == EM_EVENT_ID_NOT_EXISTS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emRemoveMemberFromEvent(em, 4, 4) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emRemoveMemberFromEvent(em, 4, 5) == EM_EVENT_AND_MEMBER_NOT_LINKED, destroyRemoveEventsAndMembers);
+    emPrintAllEvents(em, "expectedAllEvents3.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedAllEvents3.out.txt", "event,5.1.-100\n"
+        "event,6.1.-100,member\n"
+        "event,7.1.-100,member\n"
+        "event,8.1.-100,member\n"
+        "event,9.1.-100,member\n"
+        "event,10.1.-100,member\n"),
+        destroyRemoveEventsAndMembers);
+    date = dateCreate(11, 1, -100);
+    ASSERT_TEST(emChangeEventDate(em, 4, date) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    emPrintAllEvents(em, "expectedAllEvents4.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedAllEvents4.out.txt", "event,6.1.-100,member\n"
+        "event,7.1.-100,member\n"
+        "event,8.1.-100,member\n"
+        "event,9.1.-100,member\n"
+        "event,10.1.-100,member\n"
+        "event,11.1.-100\n"),
+        destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMember(em, "adam", 0) == EM_MEMBER_ID_ALREADY_EXISTS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMember(em, "adam", 10) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 10, 4) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 10, 5) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 10, 6) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emAddMemberToEvent(em, 10, 7) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    emPrintAllEvents(em, "expectedNewEvents5.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedNewEvents5.out.txt", "event,6.1.-100,member,adam\n"
+        "event,7.1.-100,member,adam\n"
+        "event,8.1.-100,member,adam\n"
+        "event,9.1.-100,member\n"
+        "event,10.1.-100,member\n"
+        "event,11.1.-100,adam\n"),
+        destroyRemoveEventsAndMembers);
+    emPrintAllResponsibleMembers(em, "expectedNewMembers6.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedNewMembers6.out.txt", "adam,4\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"), destroyRemoveEventsAndMembers);
+    ASSERT_TEST(emRemoveEvent(em, 7) == EM_SUCCESS, destroyRemoveEventsAndMembers);
+    emPrintAllResponsibleMembers(em, "expectedNewMembersAfterRemove7.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedNewMembersAfterRemove7.out.txt", "adam,3\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"
+        "member,1\n"),
+        destroyRemoveEventsAndMembers);
+    emPrintAllEvents(em, "expectedNewEventsAfterRemove8.out.txt");
+    ASSERT_TEST(isFilePrintOutputCorrect("expectedNewEventsAfterRemove8.out.txt", "event,6.1.-100,member,adam\n"
+        "event,7.1.-100,member,adam\n"
+        "event,9.1.-100,member\n"
+        "event,10.1.-100,member\n"
+        "event,11.1.-100,adam\n"),
+        destroyRemoveEventsAndMembers);
+
+
+destroyRemoveEventsAndMembers:
+    dateDestroy(date);
+    dateDestroy(startDate);
+    destroyEventManager(em);
+    return result;
+}
 
 #define TEST_NAMES \
     X(testEMCreateStandardTest) \
@@ -1190,8 +1318,9 @@ destroy:
     X(testEMPrintAllEventsBasicTests) \
     X(testBigEventManager_CreatorYanTomsinsky) \
     X(testChangeDate_CreatorAdar) \
-    X(testRemoveEventsAndMembers_CreatorAdar) 
-    //X(testEMPrintAllEventsMembersTests_CreatorLiranLavi)
+    X(testRemoveEventsAndMembers_CreatorAdar) \
+    X(checkNegativeDate_CreatorAdam) \
+    X(testNegativeYearTwo_CreatorAdam)
 
 
 bool (*tests[])(void) = {
@@ -1206,7 +1335,7 @@ const char* testNames[] = {
 #undef X
 };
 
-#define NUMBER_TESTS 34
+#define NUMBER_TESTS 36
 
 int main(int argc, char** argv) {
     if (argc == 1) {

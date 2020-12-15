@@ -195,19 +195,18 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     queue->iterator = NULL;
 
     PQElement copyElement = queue->copy_element(element);
-    PQElementPriority copyPriority = queue->copy_priority(priority);
-
 
     if (!copyElement)
     {
+        //queue->free_element(copyElement);
         return PQ_OUT_OF_MEMORY;
     }
 
+    PQElementPriority copyPriority = queue->copy_priority(priority);
+
     if (!copyPriority)
     {
-        //new
-        //queue->free_element(element);
-        //queue->free_element(copyElement);
+        queue->free_element(copyElement);
         //queue->free_priority(copyPriority);
         return PQ_OUT_OF_MEMORY;
     }
@@ -237,12 +236,12 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
 
     else
     {
-        
+
         while (head->next != NULL && queue->compare_priorities(priority, head->next->elementPriorityNode) <= ZERO)
         {
             head = head->next;
         }
-        
+
         if (head->next)
         {
             Node temp = head->next;
@@ -273,21 +272,19 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element,
 
     queue->iterator = NULL;
     PQElement copyElement = queue->copy_element(element);
-    PQElementPriority copyPriority = queue->copy_priority(new_priority);
 
     if (!copyElement)
     {
         queue->free_element(copyElement);
-        queue->free_priority(copyPriority);
-
         return PQ_OUT_OF_MEMORY;
     }
+
+    PQElementPriority copyPriority = queue->copy_priority(new_priority);
 
     if (!copyPriority)
     {
         queue->free_element(copyElement);
         queue->free_priority(copyPriority);
-
         return PQ_OUT_OF_MEMORY;
     }
 

@@ -21,10 +21,10 @@ static void freeElementStructGeneric(PQElement element_struct)
 {
     free(((EventsElement)element_struct)->name);
     //free(((EventsElement)element_struct)->id);
-    dateDestroy(((EventsElement)element_struct)->date);
-    ((EventsElement)element_struct)->event_members = NULL;
+    dateDestroy((Date)((EventsElement)element_struct)->date);
+    //((EventsElement)element_struct)->event_members = NULL;
     destroyEventMembers(((EventsElement)element_struct)->event_members);
-    free(element_struct); //
+    free(element_struct); 
 }
 
 static void freePriorityElementDateGeneric(PQElementPriority date)
@@ -49,16 +49,16 @@ static PQElement copyStructElementGeneric(PQElement element_struct)
     int length = 0;
 
     length = strlen(((EventsElement)element_struct)->name);
-    copy_element->name = malloc(sizeof(char) * length + 1);
+    copy_element->name = malloc((sizeof(char*) * length) + 1);
 
     if (!copy_element->name)
     {
-        free(copy_element);
+        freeElementStructGeneric(copy_element);
         return NULL;
     }
 
-    strncpy(copy_element->name, ((EventsElement)element_struct)->name, length + 1);
-
+    //strncpy(copy_element->name, ((EventsElement)element_struct)->name, length + 1);
+    strcpy(copy_element->name, ((EventsElement)element_struct)->name);
     copy_element->id = ((EventsElement)element_struct)->id;
     copy_element->date = dateCopy(((EventsElement)element_struct)->date);
     copy_element->event_members = pqCopy(((EventsElement)element_struct)->event_members);
@@ -73,8 +73,8 @@ static PQElementPriority copyPriorityElementDateGeneric(PQElementPriority date)
         return NULL;
     }
 
-    Date copy_date = malloc(sizeof(Date));
-    copy_date = dateCopy((Date)date);
+    //Date copy_date = malloc(sizeof(Date));
+    Date copy_date = dateCopy((Date)date);
 
     return copy_date;
 }
@@ -128,13 +128,13 @@ EventsElement getEventByEventId(Events events, int id)
         return NULL;
     }
 
-    EventsElement event_element = malloc(sizeof(*event_element));
+    EventsElement event_element = pqGetFirst(events);//malloc(sizeof(*event_element));
     if (!event_element)
     {
         return NULL;
     }
 
-    event_element = pqGetFirst(events);
+    //event_element = pqGetFirst(events);
 
     if (event_element->id == id)
     {
@@ -171,8 +171,13 @@ bool changeDateInElementInEvents(Events events, Date date, int id)
         return false;
     }
 
-    EventsElement found_element = malloc(sizeof(*found_element));
+    EventsElement found_element;// = malloc(sizeof(*found_element));
     found_element = ((EventsElement)pqGetFirst(events));
+
+    if (!found_element)
+    {
+        return false;
+    }
 
     if (found_element->id == id)
     {
@@ -210,7 +215,21 @@ void changeMemberCounterPriorityWhenRemoveEvent(Members members, int member_id)
             getMemberIdByMember(getMemberById(members, member_id)));
 
 
-    pqChangePriority(members, member_element, member_priority, new_member_priority);
+    PriorityQueueResult change_priority_result = pqChangePriority(members, member_element, member_priority,
+        new_member_priority);
+
+    if (change_priority_result == PQ_OUT_OF_MEMORY)
+    {
+
+        destroyMembersElement(member_element);
+        destroyMemberPriority(member_priority);
+        destroyMemberPriority(new_member_priority);
+        return;
+    }
+
+    destroyMembersElement(member_element);
+    destroyMemberPriority(member_priority);
+    destroyMemberPriority(new_member_priority);
 }
 
 bool removeOccursEvents(Members members, Events events, Date current_date)
@@ -220,22 +239,22 @@ bool removeOccursEvents(Members members, Events events, Date current_date)
         return false;
     }
 
-    EventsElement current_event = malloc(sizeof(*current_event));
+    EventsElement current_event = pqGetFirst(events);// = malloc(sizeof(*current_event));
 
     if (!current_event)
     {
         return false;
     }
 
-    current_event = pqGetFirst(events);
+    //current_event = pqGetFirst(events);
 
-    EventMemberElement event_member_element = malloc(sizeof(event_member_element));
-
+    EventMemberElement event_member_element;// = malloc(sizeof(event_member_element));
+    /*
     if (!event_member_element)
     {
         return false;
     }
-    
+    */
     int member_id = 0;
 
     while (current_event && dateCompare(current_event->date, current_date) < ZERO)
