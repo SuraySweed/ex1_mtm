@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "event_manager.h"
-#include "date.h"
+#include "../event_manager.h"
+#include "../date.h"
 
 #define OK_EVENT_NAME "event_name"
 #define OK_EVENT_ID 50

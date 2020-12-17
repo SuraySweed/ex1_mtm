@@ -274,7 +274,7 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
 
     Date privious_date = getEventDate(event);
 
-    PriorityQueueResult change_priority_result = pqChangePriority(em->events, event, privious_date, new_date);
+    PriorityQueueResult change_priority_result =  pqChangePriority(em->events, event, privious_date, new_date);
     
     if (change_priority_result == PQ_OUT_OF_MEMORY)
     {
@@ -284,9 +284,17 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
 
         return EM_OUT_OF_MEMORY;
     }
+    
+    if (changeDateInElementInEvents(em->events, new_date, event_id))
+    {
+        return EM_SUCCESS;
+    }
 
-    changeDateInElementInEvents(em->events, new_date, event_id);
-    return EM_SUCCESS;
+    destroyEventElement(event);
+    dateDestroy(privious_date);
+    destroyEventManager(em);
+
+    return EM_OUT_OF_MEMORY;
 }
 
 EventManagerResult emAddMember(EventManager em, char* member_name, int member_id)

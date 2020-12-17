@@ -10,6 +10,7 @@ struct EventMemberElement_t {
     int id;
 };
 
+/*type of function for deallocationg a data element of the events*/
 static void freeElementStructGeneric(PQElement element_struct)
 {
     if (!element_struct)
@@ -21,11 +22,13 @@ static void freeElementStructGeneric(PQElement element_struct)
     free(element_struct);
 }
 
+/*Type of function for deallocating a key element of the events*/
 static void freePriorityElementIntGeneric(PQElementPriority id)
 {
     free(id);
 }
 
+/*Type of function for copying a data element of the priority queue */
 static PQElement copyStructElementGeneric(PQElement element_struct)
 {
     if (!element_struct)
@@ -57,6 +60,7 @@ static PQElement copyStructElementGeneric(PQElement element_struct)
     return copy_element;
 }
 
+/** Type of function for copying a data key element of the priority queue */
 static PQElementPriority copyIntPriorityElementGeneric(PQElementPriority id)
 {
     if (!id)
@@ -76,16 +80,30 @@ static PQElementPriority copyIntPriorityElementGeneric(PQElementPriority id)
     return copy;
 }
 
+/**
+* Type of function used by the events to compare priorities(dates).
+* This function should return:
+* 		A positive integer if the first element is greater;
+* 		0 if they're equal;
+*		A negative integer if the second element is greater.
+*/
 static int compareIntPriorityElementGeneric(PQElementPriority id1, PQElementPriority id2)
 {
     return(*(int*)id2 - *(int*)id1);
 }
 
+/**
+* Type of function used by the priority queue to identify equal elements.
+* This function should return:
+* 		true if they're equal;
+*		false otherwise;
+*/
 static bool equalIdElementsGeneric(PQElement element1, PQElement element2)
 {
     return (((EventMemberElement)element1)->id == ((EventMemberElement)element2)->id);
 }
 
+// creaet a new event members
 EventMembers createEventMembers()
 {
     EventMembers event_members = pqCreate(copyStructElementGeneric, freeElementStructGeneric,
@@ -95,6 +113,7 @@ EventMembers createEventMembers()
     return event_members;
 }
 
+// create a new element
 EventMemberElement createEventMemberElement(char* name, int id)
 {
     if (!name)
@@ -119,11 +138,13 @@ EventMemberElement createEventMemberElement(char* name, int id)
     return build_element;
 }
 
+// return id by element
 int getIdByEventMemberElement(EventMemberElement event_member_element)
 {
     return event_member_element->id;
 }
 
+// return name by element
 char* getNameByEventMemberElement(EventMemberElement event_members_element)
 {
     if (!event_members_element)
@@ -134,7 +155,7 @@ char* getNameByEventMemberElement(EventMemberElement event_members_element)
     return event_members_element->name;
 }
 
-
+// destroy the element
 void destroyEventMemberElement(EventMemberElement event_members_element)
 {
     if (!event_members_element)
@@ -145,6 +166,7 @@ void destroyEventMemberElement(EventMemberElement event_members_element)
     freeElementStructGeneric(event_members_element);
 }
 
+// destroy the event members pq
 void destroyEventMembers(EventMembers event_members)
 {
     pqDestroy(event_members);

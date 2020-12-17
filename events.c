@@ -17,27 +17,29 @@ struct EventsElement_t {
 
 };
 
+/*type of function for deallocationg a data element of the events*/
 static void freeElementStructGeneric(PQElement element_struct)
 {
     free(((EventsElement)element_struct)->name);
-    //free(((EventsElement)element_struct)->id);
     dateDestroy((Date)((EventsElement)element_struct)->date);
-    //((EventsElement)element_struct)->event_members = NULL;
     destroyEventMembers(((EventsElement)element_struct)->event_members);
     free(element_struct); 
 }
 
+/*Type of function for deallocating a key element of the events*/
 static void freePriorityElementDateGeneric(PQElementPriority date)
 {
     dateDestroy(((Date)date));
 }
 
+/*Type of function for copying a data element of the priority queue */
 static PQElement copyStructElementGeneric(PQElement element_struct)
 {
     if (!element_struct)
     {
         return NULL;
     }
+
 
     EventsElement copy_element = malloc((sizeof(*copy_element)));
 
@@ -57,15 +59,26 @@ static PQElement copyStructElementGeneric(PQElement element_struct)
         return NULL;
     }
 
-    //strncpy(copy_element->name, ((EventsElement)element_struct)->name, length + 1);
     strcpy(copy_element->name, ((EventsElement)element_struct)->name);
     copy_element->id = ((EventsElement)element_struct)->id;
     copy_element->date = dateCopy(((EventsElement)element_struct)->date);
+    if (!copy_element->date)
+    {
+        freeElementStructGeneric(copy_element);
+        return NULL;
+    }
+    
     copy_element->event_members = pqCopy(((EventsElement)element_struct)->event_members);
+    if (!copy_element->event_members)
+    {
+        freeElementStructGeneric(copy_element);
+        return NULL;
+    }
 
     return copy_element;
 }
 
+/** Type of function for copying a data key element of the priority queue */
 static PQElementPriority copyPriorityElementDateGeneric(PQElementPriority date)
 {
     if (!date)
@@ -73,17 +86,29 @@ static PQElementPriority copyPriorityElementDateGeneric(PQElementPriority date)
         return NULL;
     }
 
-    //Date copy_date = malloc(sizeof(Date));
     Date copy_date = dateCopy((Date)date);
 
     return copy_date;
 }
 
+/**
+* Type of function used by the events to compare priorities(dates).
+* This function should return:
+* 		A positive integer if the first element is greater;
+* 		0 if they're equal;
+*		A negative integer if the second element is greater.
+*/
 static int compareDatePriorityElementGeneric(PQElementPriority date, PQElementPriority current_date_in_em)
 {
     return dateCompare(current_date_in_em, date);
 }
 
+/**
+* Type of function used by the priority queue to identify equal elements.
+* This function should return:
+* 		true if they're equal;
+*		false otherwise;
+*/
 static bool equalIdElementGeneric(PQElement element1, PQElement element2)
 {
     int is_equal_id = 0;
@@ -93,6 +118,7 @@ static bool equalIdElementGeneric(PQElement element1, PQElement element2)
     return is_equal_id == 0 ? true : false;
 }
 
+// create a new events
 Events createEvents()
 {
     Events events = pqCreate(copyStructElementGeneric, freeElementStructGeneric, equalIdElementGeneric,
@@ -101,6 +127,7 @@ Events createEvents()
     return events;
 }
 
+// return the name of the event_element
 char* getEventName(EventsElement event_element)
 {
     if (!event_element)
@@ -111,6 +138,7 @@ char* getEventName(EventsElement event_element)
     return event_element->name;
 }
 
+// return the date of the event_element
 Date getEventDate(EventsElement event_element)
 {
     if (!event_element)
@@ -121,6 +149,7 @@ Date getEventDate(EventsElement event_element)
     return event_element->date;
 }
 
+// return event by event_id
 EventsElement getEventByEventId(Events events, int id)
 {
     if (pqGetSize(events) == 0)
@@ -128,13 +157,11 @@ EventsElement getEventByEventId(Events events, int id)
         return NULL;
     }
 
-    EventsElement event_element = pqGetFirst(events);//malloc(sizeof(*event_element));
+    EventsElement event_element = pqGetFirst(events);
     if (!event_element)
     {
         return NULL;
     }
-
-    //event_element = pqGetFirst(events);
 
     if (event_element->id == id)
     {
@@ -154,6 +181,7 @@ EventsElement getEventByEventId(Events events, int id)
     return NULL;
 }
 
+// return event_members in by the sent event
 EventMembers getEventMembersByEvent(EventsElement event)
 {
     if (!event)
@@ -164,6 +192,7 @@ EventMembers getEventMembersByEvent(EventsElement event)
     return event->event_members;
 }
 
+// change the date in a specific element 
 bool changeDateInElementInEvents(Events events, Date date, int id)
 {
     if (!events || !date)
@@ -171,7 +200,7 @@ bool changeDateInElementInEvents(Events events, Date date, int id)
         return false;
     }
 
-    EventsElement found_element;// = malloc(sizeof(*found_element));
+    EventsElement found_element;
     found_element = ((EventsElement)pqGetFirst(events));
 
     if (!found_element)
@@ -181,7 +210,12 @@ bool changeDateInElementInEvents(Events events, Date date, int id)
 
     if (found_element->id == id)
     {
+        dateDestroy(found_element->date);
         found_element->date = dateCopy(date);
+        if (!found_element->date)
+        {
+            return false;
+        }
         return true;
     }
 
@@ -191,7 +225,12 @@ bool changeDateInElementInEvents(Events events, Date date, int id)
 
         if (found_element->id == id)
         {
+            dateDestroy(found_element->date);
             found_element->date = dateCopy(date);
+            if (!found_element->date)
+            {
+                return false;
+            }
             return true;
         }
     }
@@ -199,6 +238,7 @@ bool changeDateInElementInEvents(Events events, Date date, int id)
     return false;
 }
 
+// change the priority of the members if we remove some event
 void changeMemberCounterPriorityWhenRemoveEvent(Members members, int member_id)
 {
     MembersElement member_element =
@@ -232,6 +272,7 @@ void changeMemberCounterPriorityWhenRemoveEvent(Members members, int member_id)
     destroyMemberPriority(new_member_priority);
 }
 
+// remove all the occures events according to the current_Date
 bool removeOccursEvents(Members members, Events events, Date current_date)
 {
     if (!members || !events || !current_date)
@@ -239,22 +280,16 @@ bool removeOccursEvents(Members members, Events events, Date current_date)
         return false;
     }
 
-    EventsElement current_event = pqGetFirst(events);// = malloc(sizeof(*current_event));
+    EventsElement current_event = pqGetFirst(events);
 
     if (!current_event)
     {
         return false;
     }
 
-    //current_event = pqGetFirst(events);
 
-    EventMemberElement event_member_element;// = malloc(sizeof(event_member_element));
-    /*
-    if (!event_member_element)
-    {
-        return false;
-    }
-    */
+    EventMemberElement event_member_element;
+
     int member_id = 0;
 
     while (current_event && dateCompare(current_event->date, current_date) < ZERO)
@@ -266,24 +301,6 @@ bool removeOccursEvents(Members members, Events events, Date current_date)
             
             member_id = getIdByEventMemberElement(event_member_element);
 
-            /*
-            MembersElement member_element = 
-                createMemberElement(getMemberNameByMember(getMemberById(members, member_id)) , member_id, 
-                  getEventsCounterInMember(getMemberById(members, member_id)));
-            
-            MembersPriority member_priority =
-                createMemberPriority(getEventsCounterInMember(getMemberById(members, member_id)),
-                    getMemberIdByMember(getMemberById(members, member_id)));
-
-
-            MembersPriority new_member_priority =
-                createMemberPriority((getEventsCounterInMember(getMemberById(members, member_id)) - 1),
-                    getMemberIdByMember(getMemberById(members, member_id)));
-
-
-            pqChangePriority(members, member_element, member_priority, new_member_priority);
-            */
-
             changeMemberCounterPriorityWhenRemoveEvent(members, member_id);
             subEventsCounterInMember(getMemberById(members, member_id));
 
@@ -294,11 +311,10 @@ bool removeOccursEvents(Members members, Events events, Date current_date)
         current_event = pqGetFirst(events);
     }
 
-    //destroyEventMemberElement(event_member_element);
-
     return true;
 }
 
+// reutrn a new event element 
 EventsElement createEventsElement(char* name, int id, Date date, EventMembers event_members)
 {
     if (!date || !name)
@@ -325,12 +341,18 @@ EventsElement createEventsElement(char* name, int id, Date date, EventMembers ev
     strncpy(event_element->name, name, name_length + 1);
     event_element->id = id;
     event_element->date = dateCopy(date);
+    if (!event_element->date)
+    {
+        freeElementStructGeneric(event_element);
+        return NULL;
+    }
+    
     event_element->event_members = createEventMembers();
-
     return event_element;
 
 }
 
+// destroy event element
 void destroyEventElement(EventsElement event_element)
 {
     if (!event_element)
@@ -341,6 +363,7 @@ void destroyEventElement(EventsElement event_element)
     freeElementStructGeneric(event_element);
 }
 
+// destroy events
 void destroyEvents(Events events)
 {
     pqDestroy(events);
